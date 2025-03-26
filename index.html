@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brain Tumor Detection</title>
+    <link rel="icon" type="image/svg+xml" href="images/icon.svg" />
+    <style>
+      /* Apply background image */
+      body {
+        background: url("images/background_image.jpg") no-repeat center
+          center/cover;
+        color: white;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+      }
+
+      /* Styling for the container */
+      .container {
+        background: rgba(0, 0, 0, 0.7);
+        padding: 30px;
+        border-radius: 10px;
+        width: 90%;
+        margin: auto;
+        box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+      }
+
+      /* Style for file input and button */
+      input[type="file"] {
+        margin: 15px 0;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        background: white;
+        color: black;
+      }
+
+      button {
+        background: #ff4c4c;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: 0.3s;
+      }
+
+      button:hover {
+        background: #d43f3f;
+      }
+
+      /* Image Styling */
+      img {
+        display: block;
+        margin: 20px auto;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.5);
+      }
+
+      /* Tumor Info Styling */
+      pre {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 15px;
+        border-radius: 5px;
+        display: inline-block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Brain Tumor Detection</h1>
+      <input type="file" id="upload" accept="image/*" />
+      <button id="predict-btn" onclick="uploadImage()">Predict Tumor</button>
+
+      <h2>Detected Tumor:</h2>
+      <img
+        id="result"
+        src="./images/default_image.png"
+        alt="Predicted Image"
+        width="300"
+        height="300"
+      />
+
+      <h2>Tumor Information:</h2>
+      <pre id="tumor_info">No tumor detected yet</pre>
+    </div>
+
+    <script>
+      function uploadImage() {
+        let fileInput = document.getElementById("upload").files[0];
+        let formData = new FormData();
+        formData.append("file", fileInput);
+
+        let button = document.getElementById("predict-btn");
+        button.disabled = true; // Disable button to prevent multiple clicks
+
+        fetch("http://127.0.0.1:8000/predict/", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            if (data.image_url) {
+              document.getElementById("result").src = data.image_url;
+            }
+            if (data.tumor_info.length > 0) {
+              document.getElementById("tumor_info").textContent =
+                data.tumor_info.map((t) => t.tumor_type).join(", ");
+            } else {
+              alert("No tumor detected.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Prediction failed. Check console for details.");
+          })
+          .finally(() => {
+            button.disabled = false; // Re-enable button after request completes
+          });
+      }
+
+      // Attach the function to button click event
+      document
+        .getElementById("predict-btn")
+        .addEventListener("click", uploadImage);
+    </script>
+  </body>
+</html>
